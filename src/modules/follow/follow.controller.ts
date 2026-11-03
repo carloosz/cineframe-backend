@@ -1,4 +1,12 @@
-import { Controller, Put, UseGuards, Param, ParseUUIDPipe, Delete } from '@nestjs/common';
+import {
+   Controller,
+   Put,
+   UseGuards,
+   Param,
+   ParseUUIDPipe,
+   Delete,
+   Get,
+} from '@nestjs/common';
 import { FollowService } from './follow.service';
 import { ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
@@ -30,5 +38,13 @@ export class FollowController {
       @Param('targetUserId', ParseUUIDPipe) targetUserId: string,
    ) {
       return this.followService.unfollow(loggedUserId, targetUserId);
+   }
+
+   @ApiOperation({ summary: 'Listar quem seguir' })
+   @UseGuards(JwtAuthGuard)
+   @Roles(RoleEnum.Authenticated)
+   @Get('who-to-follow')
+   async whoToFollow(@CurrentUser('id', ParseUUIDPipe) loggedUserId: string) {
+      return this.followService.whoToFollow(loggedUserId);
    }
 }
