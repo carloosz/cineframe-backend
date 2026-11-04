@@ -23,6 +23,15 @@ export class FollowService {
       private readonly userMovieRepository: Repository<UserMovie>,
    ) {}
 
+   public avatarUrl(user: User) {
+      const activePhoto = user.uploads.find(
+         (u) => u.active && u.type === 'avatar',
+      );
+      return activePhoto
+         ? `${env.API_URL}/files/${activePhoto.filename}`
+         : null;
+   }
+
    async follow(loggedUserId: string, targetUserId: string) {
       if (loggedUserId === targetUserId) {
          throw new BadRequestException('Você não pode seguir a si mesmo');
@@ -169,48 +178,77 @@ export class FollowService {
       };
    }
 
-   async whoToFollow(loggedUserId: string, limit = 6) {
-      const followings = await this.followRepository.find({
-         where: { followerId: loggedUserId },
-         select: { followingId: true },
-      });
+   async whoToFollow(me: string, limit = 3) {
+      const wanted = limit * 2; // folga: alguns candidatos podem cair no filtro final
+      const notFollowedByMe =
+         'NOT IN (SELECT x."followingId" FROM follow x WHERE x."followerId" = :me)';
 
-      const followingsIds = new Set(followings.map((f) => f.followingId));
+      const mutual = await this.followRepository
+         .createQueryBuilder('f2')
+         .select('f2.followingId', 'userId')
+         .addSelect('COUNT(*)', 'common')
+         .innerJoin(
+            Follow,
+            'f1',
+            'f1."followingId" = f2."followerId" AND f1."followerId" = :me',
+            { me },
+         )
+         .where('f2."followingId" <> :me', { me })
+         .andWhere(`f2."followingId" ${notFollowedByMe}`, { me })
+         .groupBy('f2.followingId')
+         .orderBy('COUNT(*)', 'DESC')
+         .limit(wanted)
+         .getRawMany<{ userId: string; common: string }>();
 
-      const usersToFollow = await this.userRepository.find({
+      const followBack = await this.followRepository
+         .createQueryBuilder('f')
+         .select('f.followerId', 'userId')
+         .where('f."followingId" = :me', { me })
+         .andWhere(`f."followerId" ${notFollowedByMe}`, { me })
+         .orderBy('f."createdAt"', 'DESC')
+         .limit(wanted)
+         .getRawMany<{ userId: string }>();
+
+      const recent = await this.userRepository
+         .createQueryBuilder('u')
+         .select('u.id', 'userId')
+         .where('u.id <> :me', { me })
+         .andWhere(`u.id ${notFollowedByMe}`, { me })
+         .orderBy('u."createdAt"', 'DESC')
+         .limit(wanted)
+         .getRawMany<{ userId: string }>();
+
+      const commonBy = new Map(mutual.map((m) => [m.userId, Number(m.common)]));
+      const ids = [
+         ...new Set([...mutual, ...followBack, ...recent].map((r) => r.userId)),
+      ];
+      if (!ids.length) return [];
+
+      const users = await this.userRepository.find({
          where: {
-            id: Not(In([...followingsIds, loggedUserId])),
+            id: In(ids),
+            active: true,
             userRoles: { role: { name: RoleEnum.Authenticated } },
          },
          select: { id: true, name: true, nickname: true },
          relations: { uploads: true },
-         take: limit,
       });
+      const byId = new Map(users.map((u) => [u.id, u]));
 
-      const usersWithPhoto =
-         (await Promise.all(
-            usersToFollow.map(async (u) => {
-               const activePhoto = u.uploads.find(
-                  (upload) => upload.active && upload.type === 'avatar',
-               );
-               const formatUrl = activePhoto
-                  ? `${env.API_URL}/files/${activePhoto.filename}`
-                  : null;
-               const follows = await this.followRepository.find({
-                  where: { followerId: u.id },
-                  select: { followingId: true },
-               });
-               return {
-                  ...u,
-                  photo: formatUrl,
-                  uploads: undefined,
-                  commonFollowers: follows.filter((x) =>
-                     followingsIds.has(x.followingId),
-                  ).length,
-               };
-            }),
-         )) || [];
-
-      return usersWithPhoto;
+      return ids
+         .flatMap((id) => {
+            const u = byId.get(id);
+            if (!u) return []; // desativado ou sem a role
+            return [
+               {
+                  id,
+                  name: u.name,
+                  nickname: u.nickname,
+                  photo: this.avatarUrl(u),
+                  commonFollowers: commonBy.get(id) ?? 0,
+               },
+            ];
+         })
+         .slice(0, limit);
    }
 }
