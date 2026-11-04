@@ -28,6 +28,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
 import { FollowModule } from './modules/follow/follow.module';
 import { FeedModule } from './modules/feed/feed.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
    imports: [
@@ -54,6 +55,7 @@ import { FeedModule } from './modules/feed/feed.module';
       UserMovieModule,
       FollowModule,
       FeedModule,
+      NotificationModule,
    ],
    controllers: [AppController],
    providers: [

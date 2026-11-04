@@ -25,6 +25,8 @@ import { env } from 'process';
 import { ReviewLike } from './entities/review-like.entity';
 import { ReviewSort } from './enum/review-sort.enum';
 import { Follow } from '../follow/entities/follow.entity';
+import { NotificationService } from '../notification/notification.service';
+import { avatarUrl } from 'src/common/avatar-url';
 
 type ReviewFilters = { tmdbId?: number; since?: Date };
 @Injectable()
@@ -39,6 +41,7 @@ export class UserMovieService {
       private readonly likeRepository: Repository<ReviewLike>,
       @InjectRepository(Follow)
       private readonly followRepository: Repository<Follow>,
+      private readonly notificationService: NotificationService,
    ) {}
 
    private markWatched(
@@ -47,11 +50,6 @@ export class UserMovieService {
    ) {
       um.watchedAt ??= new Date();
       if (!um.runtime && movie?.runtime) um.runtime = movie.runtime;
-   }
-
-   private avatarUrl(user?: User) {
-      const photo = user?.uploads.find((u) => u.active && u.type === 'avatar');
-      return photo ? `${env.API_URL}/files/${photo.filename}` : null;
    }
 
    private async getOrCreate(userId: string, tmdbId: number) {
@@ -85,6 +83,12 @@ export class UserMovieService {
          rating: um?.rating ?? null,
          review: um?.review ?? null,
       };
+   }
+
+   private async clearReviewData(reviewId?: string) {
+      if (!reviewId) return; // nunca deixe um undefined chegar num delete
+      await this.likeRepository.delete({ userMovieId: reviewId });
+      await this.notificationService.removeByReview(reviewId);
    }
 
    private async listMovies<E extends object>(
@@ -145,42 +149,36 @@ export class UserMovieService {
          throw new BadRequestException('Informe rating e/ou review');
       }
 
+      // undefined = não mexe | null = apaga | string = novo texto
+      const review =
+         dto.review === undefined ? undefined : dto.review?.trim() || null;
+
       const movie =
-         dto.rating || dto.review ? await this.tmdb.details(tmdbId) : null; // lanca 404 se o filme não existir
+         dto.rating || review ? await this.tmdb.details(tmdbId) : null;
 
-      const userMovie =
-         (await this.userMovieRepository.findOneBy({ userId, tmdbId })) ??
-         this.userMovieRepository.create({ userId, tmdbId });
+      const um = await this.getOrCreate(userId, tmdbId);
+      const hadReview = !!um.review;
+      const reviewId = um.id;
 
-      if (dto.rating !== undefined) userMovie.rating = dto.rating;
-      if (dto.review !== undefined) {
-         const text = dto.review?.trim() || null;
-         // aqui: se userMovie.review existia e text é null, apagar likes e comentários
-         userMovie.review = text;
-      }
+      if (dto.rating !== undefined) um.rating = dto.rating;
+      if (review !== undefined) um.review = review;
 
-      if (!userMovie.rating && !userMovie.review) {
-         userMovie.ratedAt = null;
+      if (um.rating || um.review) {
+         um.ratedAt = new Date();
+         this.markWatched(um, movie);
+         um.watchlistedAt = null;
       } else {
-         userMovie.ratedAt = new Date();
-         this.markWatched(userMovie, movie);
-         userMovie.watchlistedAt = null;
+         um.ratedAt = null;
       }
 
-      // linha nova sem nada pra guardar: nao cria
-      const empty =
-         !userMovie.watchedAt &&
-         !userMovie.favorite &&
-         !userMovie.watchlistedAt &&
-         !userMovie.rating &&
-         !userMovie.review;
-      if (empty) {
-         if (userMovie.id) await this.userMovieRepository.remove(userMovie);
-         return this.toState(null);
+      const state = await this.saveOrRemove(um);
+
+      // só limpa se existia crítica e agora não existe mais, e só depois de salvar
+      if (hadReview && !um.review) {
+         await this.clearReviewData(reviewId);
       }
 
-      const saved = await this.userMovieRepository.save(userMovie);
-      return this.toState(saved);
+      return state;
    }
 
    async setFavorite(userId: string, tmdbId: number, value: boolean) {
@@ -447,7 +445,7 @@ export class UserMovieService {
    async likeReview(userId: string, reviewId: string) {
       const review = await this.userMovieRepository.findOne({
          where: { id: reviewId },
-         select: { id: true, userId: true, review: true },
+         select: { id: true, userId: true, review: true, tmdbId: true },
       });
       if (!review?.review)
          throw new NotFoundException('Avaliação não encontrada');
@@ -464,11 +462,14 @@ export class UserMovieService {
          .orIgnore() // ON CONFLICT DO NOTHING: segundo clique não dá erro
          .execute();
 
+      await this.notificationService.notifyLike(userId, review);
+
       return this.likeState(reviewId, true);
    }
 
    async unlikeReview(userId: string, reviewId: string) {
       await this.likeRepository.delete({ userMovieId: reviewId, userId });
+      await this.notificationService.removeLike(userId, reviewId);
       return this.likeState(reviewId, false);
    }
 
@@ -545,13 +546,13 @@ export class UserMovieService {
       const likedIds = new Set(viewerLikes.map((l) => l.userMovieId));
 
       const cards = reviews.map((r) => {
-         const user = userById.get(r.userId);
+         const user = userById.get(r.userId) as User;
          return {
             id: r.id, // reviewId, pro botão de curtir
             user: {
                id: r.userId,
                nickname: user?.nickname ?? null,
-               avatar: this.avatarUrl(user),
+               avatar: avatarUrl(user),
             },
             rating: r.rating,
             favorite: r.favorite,

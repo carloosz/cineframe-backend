@@ -9,6 +9,7 @@ import { User } from '../user/entities/user.entity';
 import { UserModule } from '../user/users.module';
 import { ReviewLike } from './entities/review-like.entity';
 import { Follow } from '../follow/entities/follow.entity';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
    controllers: [UserMovieController, ProfileMoviesController],
@@ -17,6 +18,7 @@ import { Follow } from '../follow/entities/follow.entity';
       TypeOrmModule.forFeature([UserMovie, User, ReviewLike, Follow]),
       TmdbModule,
       UserModule,
+      NotificationModule,
    ],
    exports: [UserMovieService],
 })

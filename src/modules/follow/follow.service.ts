@@ -11,6 +11,8 @@ import { UserMovie } from '../user-movie/entities/user-movie.entity';
 import { env } from 'process';
 import { escapeLike } from 'src/common/escape-like';
 import { RoleEnum } from '../role/enum/role.enum';
+import { NotificationService } from '../notification/notification.service';
+import { avatarUrl } from 'src/common/avatar-url';
 
 @Injectable()
 export class FollowService {
@@ -21,17 +23,8 @@ export class FollowService {
       private readonly userRepository: Repository<User>,
       @InjectRepository(UserMovie)
       private readonly userMovieRepository: Repository<UserMovie>,
+      private readonly notificationService: NotificationService,
    ) {}
-
-   public avatarUrl(user: User) {
-      const activePhoto = user.uploads.find(
-         (u) => u.active && u.type === 'avatar',
-      );
-      return activePhoto
-         ? `${env.API_URL}/files/${activePhoto.filename}`
-         : null;
-   }
-
    async follow(loggedUserId: string, targetUserId: string) {
       if (loggedUserId === targetUserId) {
          throw new BadRequestException('Você não pode seguir a si mesmo');
@@ -50,6 +43,8 @@ export class FollowService {
          .orIgnore()
          .execute();
 
+      await this.notificationService.notifyFollow(loggedUserId, targetUserId);
+
       return { following: true };
    }
 
@@ -58,6 +53,8 @@ export class FollowService {
          follower: { id: loggedUserId },
          following: { id: targetUserId },
       });
+
+      await this.notificationService.removeFollow(loggedUserId, targetUserId);
 
       return { following: false };
    }
@@ -244,7 +241,7 @@ export class FollowService {
                   id,
                   name: u.name,
                   nickname: u.nickname,
-                  photo: this.avatarUrl(u),
+                  photo: avatarUrl(u),
                   commonFollowers: commonBy.get(id) ?? 0,
                },
             ];
