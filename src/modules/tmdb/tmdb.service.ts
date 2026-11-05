@@ -1,7 +1,16 @@
-import { BadGatewayException, Injectable, NotFoundException, Inject } from '@nestjs/common';
+import {
+   BadGatewayException,
+   Injectable,
+   NotFoundException,
+   Inject,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { TmdbMovieDetails, TmdbMovieSummary, TmdbPaginated } from './tmdb.types';
+import {
+   TmdbMovieDetails,
+   TmdbMovieSummary,
+   TmdbPaginated,
+} from './tmdb.types';
 import { AxiosError } from 'axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -67,10 +76,13 @@ export class TmdbService {
    }
 
    search(query: string, page = 1) {
-      return this.get<TmdbPaginated<TmdbMovieSummary>>('/search/movie', {
-         query,
-         page,
-      });
+      const q = query.trim().toLowerCase();
+      return this.cached(`tmdb:search:${q}:${page}`, 30 * 60 * 1000, () =>
+         this.get<TmdbPaginated<TmdbMovieSummary>>('/search/movie', {
+            query: q,
+            page,
+         }),
+      );
    }
 
    details(id: number) {
