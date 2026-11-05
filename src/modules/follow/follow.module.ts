@@ -7,6 +7,8 @@ import { User } from '../user/entities/user.entity';
 import { UserMovie } from '../user-movie/entities/user-movie.entity';
 import { PublicFollowController } from './public-follow.controller';
 import { NotificationModule } from '../notification/notification.module';
+import { EmailModule } from '../email/email.module';
+import { LoggerModule } from '../logger/logger.module';
 
 @Module({
    controllers: [FollowController, PublicFollowController],
@@ -14,6 +16,8 @@ import { NotificationModule } from '../notification/notification.module';
    imports: [
       TypeOrmModule.forFeature([Follow, User, UserMovie]),
       NotificationModule,
+      EmailModule,
+      LoggerModule,
    ],
 })
 export class FollowModule {}

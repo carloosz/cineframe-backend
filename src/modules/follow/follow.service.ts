@@ -2,6 +2,7 @@ import {
    Injectable,
    BadRequestException,
    NotFoundException,
+   Inject,
 } from '@nestjs/common';
 import { Repository, In, Not, IsNull, ILike } from 'typeorm';
 import { Follow } from './entities/follow.entity';
@@ -13,6 +14,10 @@ import { escapeLike } from 'src/common/escape-like';
 import { RoleEnum } from '../role/enum/role.enum';
 import { NotificationService } from '../notification/notification.service';
 import { avatarUrl } from 'src/common/avatar-url';
+import { EmailService } from '../email/email.service';
+import { LoggerService } from '../logger/logger.service';
+import { CACHE_MANAGER } from 'node_modules/@nestjs/cache-manager/dist/cache.constants';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class FollowService {
@@ -24,7 +29,61 @@ export class FollowService {
       @InjectRepository(UserMovie)
       private readonly userMovieRepository: Repository<UserMovie>,
       private readonly notificationService: NotificationService,
+      @Inject(CACHE_MANAGER)
+      private cache: Cache,
+      private readonly emailService: EmailService,
+      private readonly logger: LoggerService,
    ) {}
+
+   private async sendFollowEmail(actorId: string, recipientId: string) {
+      try {
+         const key = `follow-email:${actorId}:${recipientId}`;
+         if (await this.cache.get(key)) return;
+
+         const [recipient, actor, followers, following] = await Promise.all([
+            this.userRepository.findOne({
+               where: { id: recipientId },
+               select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  confirmed: true,
+                  active: true,
+               },
+            }),
+            this.userRepository.findOne({
+               where: { id: actorId },
+               select: { id: true, nickname: true },
+               relations: { uploads: true },
+            }),
+            this.followRepository.countBy({ followingId: actorId }),
+            this.followRepository.countBy({ followerId: actorId }),
+         ]);
+
+         if (!recipient?.confirmed || !recipient.active || !actor) return;
+
+         await this.emailService.send({
+            to: recipient.email,
+            subject: `@${actor.nickname} começou a te seguir`,
+            template: 'new-follower',
+            context: {
+               recipientName: recipient.name,
+               actorNickname: actor.nickname,
+               actorAvatar: avatarUrl(actor), // URL absoluta, ou null
+               actorInitial: actor.nickname.charAt(0).toUpperCase(),
+               followers,
+               following,
+               profileUrl: `${env.FRONTEND_URL}/perfil/${actor.id}`,
+            },
+         });
+
+         await this.cache.set(key, true, 7 * 24 * 60 * 60 * 1000); // 7 dias em ms
+      } catch (e) {
+         this.logger.warn(
+            `Falha ao enviar email de novo seguidor: ${(e as Error).message}`,
+         );
+      }
+   }
    async follow(loggedUserId: string, targetUserId: string) {
       if (loggedUserId === targetUserId) {
          throw new BadRequestException('Você não pode seguir a si mesmo');
@@ -32,6 +91,11 @@ export class FollowService {
 
       const exists = await this.userRepository.existsBy({ id: targetUserId });
       if (!exists) throw new NotFoundException('Usuário não encontrado');
+
+      const alreadyFollowing = await this.followRepository.existsBy({
+         followerId: loggedUserId,
+         followingId: targetUserId,
+      });
 
       await this.followRepository
          .createQueryBuilder()
@@ -44,6 +108,10 @@ export class FollowService {
          .execute();
 
       await this.notificationService.notifyFollow(loggedUserId, targetUserId);
+
+      if (!alreadyFollowing) {
+         await this.sendFollowEmail(loggedUserId, targetUserId);
+      }
 
       return { following: true };
    }

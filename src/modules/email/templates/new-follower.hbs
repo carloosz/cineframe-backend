@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+   <meta charset="utf-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>Novo seguidor</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#0d0b14; font-family: Arial, Helvetica, sans-serif;">
+   <!-- texto de prévia na caixa de entrada -->
+   <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:#0d0b14;">
+      @{{actorNickname}} começou a te seguir no Cineframe
+   </div>
+
+   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background-color:#0d0b14; padding: 40px 0;">
+      <tr>
+         <td align="center">
+            <table role="presentation" width="480" cellpadding="0" cellspacing="0"
+               style="background-color:#1a1625; border-radius: 16px; overflow: hidden;">
+
+               <!-- Header -->
+               <tr>
+                  <td bgcolor="#7c3aed"
+                     style="background-color:#7c3aed; background-image: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 32px 40px 24px 40px; text-align: center;">
+                     <h1 style="margin:0; color:#ffffff; font-size: 22px; font-weight: 700;">
+                        Você tem um novo seguidor
+                     </h1>
+                  </td>
+               </tr>
+
+               <!-- Corpo -->
+               <tr>
+                  <td style="padding: 32px 40px;">
+                     <p style="margin:0 0 24px 0; color:#e5e0f0; font-size: 15px; line-height: 22px;">
+                        Olá, <strong>{{recipientName}}</strong>!
+                     </p>
+
+                     <!-- Foto ou inicial -->
+                     <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto 16px auto;">
+                        <tr>
+                           {{#if actorAvatar}}
+                           <td width="80" height="80" style="width:80px; height:80px;">
+                              <img src="{{actorAvatar}}" width="80" height="80" alt="@{{actorNickname}}"
+                                 style="display:block; width:80px; height:80px; border-radius:50%; border:3px solid #8b5cf6; object-fit:cover;" />
+                           </td>
+                           {{else}}
+                           <td width="80" height="80" align="center" valign="middle"
+                              style="width:80px; height:80px; border-radius:50%; border:3px solid #8b5cf6; background-color:#2a2438; color:#a78bfa; font-size:32px; font-weight:700;">
+                              {{actorInitial}}
+                           </td>
+                           {{/if}}
+                        </tr>
+                     </table>
+
+                     <p style="margin:0 0 24px 0; color:#e5e0f0; font-size: 16px; line-height: 24px; text-align:center;">
+                        <strong style="color:#a78bfa;">@{{actorNickname}}</strong> começou a te seguir.
+                     </p>
+
+                     <!-- Números -->
+                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                        style="margin: 0 0 28px 0; background-color:#211b30; border: 1px solid #2a2438; border-radius: 10px;">
+                        <tr>
+                           <td align="center" width="50%" style="padding: 14px 8px; border-right: 1px solid #2a2438;">
+                              <div style="color:#ffffff; font-size: 20px; font-weight: 700;">{{followers}}</div>
+                              <div style="color:#a89fc2; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">Seguidores</div>
+                           </td>
+                           <td align="center" width="50%" style="padding: 14px 8px;">
+                              <div style="color:#ffffff; font-size: 20px; font-weight: 700;">{{following}}</div>
+                              <div style="color:#a89fc2; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">Seguindo</div>
+                           </td>
+                        </tr>
+                     </table>
+
+                     <!-- Botão -->
+                     <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                        <tr>
+                           <td align="center" bgcolor="#7c3aed"
+                              style="border-radius: 10px; background-color:#7c3aed; background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                              <a href="{{profileUrl}}"
+                                 style="display:inline-block; padding: 14px 32px; font-size: 14px; font-weight: 700; color:#ffffff; text-decoration:none; border-radius: 10px;">
+                                 Ver perfil
+                              </a>
+                           </td>
+                        </tr>
+                     </table>
+
+                     <p style="margin:28px 0 0 0; color:#6b6284; font-size: 12px; line-height: 18px; text-align:center;">
+                        Se o botão não funcionar, copie e cole este link no navegador:<br />
+                        <a href="{{profileUrl}}" style="color:#a78bfa; word-break: break-all;">{{profileUrl}}</a>
+                     </p>
+                  </td>
+               </tr>
+
+               <!-- Footer -->
+               <tr>
+                  <td style="padding: 20px 40px; border-top: 1px solid #2a2438; text-align:center;">
+                     <p style="margin:0; color:#524a68; font-size: 11px; line-height: 16px;">
+                        Você recebeu este email porque @{{actorNickname}} começou a te seguir no Cineframe.
+                        {{#if settingsUrl}}<br /><a href="{{settingsUrl}}" style="color:#7a6fa0;">Gerenciar notificações por email</a>{{/if}}
+                     </p>
+                  </td>
+               </tr>
+
+            </table>
+         </td>
+      </tr>
+   </table>
+</body>
+
+</html>
