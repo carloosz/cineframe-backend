@@ -6,15 +6,6 @@ import { LoggerService } from './modules/logger/logger.service';
 import { LoggerSentryTransport } from './modules/logger/transports/logger-sentry.transport';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { existsSync, readdirSync } from 'fs';
-
-const dir = join(process.cwd(), 'files');
-console.log('[static]', {
-   cwd: process.cwd(),
-   dir,
-   existe: existsSync(dir),
-   arquivos: existsSync(dir) ? readdirSync(dir) : [],
-});
 
 async function bootstrap() {
    const app = await NestFactory.create<NestExpressApplication>(AppModule);
