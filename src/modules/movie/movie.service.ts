@@ -152,4 +152,27 @@ export class MovieService {
 
       return items;
    }
+
+   async suggest(query: string, limit = 4) {
+      const q = query?.trim();
+      if (!q || q.length < 2) return []; // so busca se tiver 2 ou mais caracteres
+
+      const data = await this.tmdb.search(q);
+      const top = data.results.filter((m) => m.poster_path).slice(0, limit);
+
+      const settled = await Promise.allSettled(
+         top.map((m) => this.tmdb.cardWithDirector(m.id)),
+      );
+
+      return top.map((m, i) => {
+         const s = settled[i];
+         return {
+            id: m.id,
+            title: m.title,
+            year: m.release_date?.slice(0, 4) || null,
+            poster: img(m.poster_path, 'w154'),
+            director: s.status === 'fulfilled' ? s.value.director : null,
+         };
+      });
+   }
 }

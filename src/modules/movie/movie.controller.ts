@@ -35,6 +35,15 @@ export class MovieController {
       return this.movieService.search(q, page ? Number(page) : 1);
    }
 
+   @Get('suggest')
+   @Throttle({ default: { limit: 60, ttl: minutes(1) } })
+   suggest(
+      @Query('q') q = '',
+      @Query('limit', new DefaultValuePipe(4), ParseIntPipe) limit: number,
+   ) {
+      return this.movieService.suggest(q, Math.min(Math.max(limit, 1), 8));
+   }
+
    @ApiOperation({
       summary: 'Get movie recommendations based on a specific movie',
    })
