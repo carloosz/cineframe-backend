@@ -11,7 +11,6 @@ async function bootstrap() {
    const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
    app.set('trust proxy', 1);
-   app.useStaticAssets(join(process.cwd(), 'files'), { prefix: '/files' });
 
    app.useGlobalPipes(
       new ValidationPipe({
@@ -20,8 +19,6 @@ async function bootstrap() {
          transform: true,
       }),
    );
-
-   app.useStaticAssets(join(process.cwd(), 'files'), { prefix: '/files' });
 
    const customLoggerService = app.get(LoggerService);
    const loggerSentryTransport = app.get(LoggerSentryTransport);
