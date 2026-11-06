@@ -26,7 +26,7 @@ import { ReviewLike } from './entities/review-like.entity';
 import { ReviewSort } from './enum/review-sort.enum';
 import { Follow } from '../follow/entities/follow.entity';
 import { NotificationService } from '../notification/notification.service';
-import { avatarUrl } from 'src/common/avatar-url';
+import { avatarUrl } from 'src/common/image-urls';
 
 type ReviewFilters = { tmdbId?: number; since?: Date };
 @Injectable()

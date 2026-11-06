@@ -29,6 +29,7 @@ import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
 import { FollowModule } from './modules/follow/follow.module';
 import { FeedModule } from './modules/feed/feed.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
    imports: [
@@ -56,6 +57,7 @@ import { NotificationModule } from './modules/notification/notification.module';
       FollowModule,
       FeedModule,
       NotificationModule,
+      StorageModule,
    ],
    controllers: [AppController],
    providers: [

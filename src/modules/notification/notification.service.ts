@@ -6,7 +6,7 @@ import { LoggerService } from '../logger/logger.service';
 import { Notification } from './entities/notification.entity';
 import { TmdbService } from '../tmdb/tmdb.service';
 import { User } from '../user/entities/user.entity';
-import { avatarUrl } from 'src/common/avatar-url';
+import { avatarUrl } from 'src/common/image-urls';
 
 @Injectable()
 export class NotificationService {

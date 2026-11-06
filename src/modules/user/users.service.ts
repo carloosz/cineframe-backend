@@ -21,9 +21,9 @@ import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
 import { MoreThanOrEqual, Not } from 'typeorm';
 import { FilmGenresEnum } from './enum/film-genres.enum';
-import { env } from 'process';
 import { Upload } from '../upload/entities/upload.entity';
 import { randomBytes } from 'crypto';
+import { avatarUrl, bannerUrl, uploadUrls } from 'src/common/image-urls';
 
 @Injectable()
 export class UserService {
@@ -145,15 +145,15 @@ export class UserService {
       });
 
       if (!user) {
-         console.log('Usuário com id ' + id + ' nao encontrado');
          throw new NotFoundException(`Usuário não encontrado`);
       }
       return plainToInstance(UserDto, {
          ...user,
-         uploads: user.uploads.map((upload) => ({
-            ...upload,
-            url: env.API_URL + '/files/' + upload.filename,
-         })),
+         uploads: [...user.uploads]
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) // mais novas primeiro
+            .map((upload) => ({ ...upload, ...uploadUrls(upload) })),
+         avatar: avatarUrl(user, 'avatar'),
+         banner: bannerUrl(user),
          roles: user.userRoles.map((userRole) => userRole.role),
       });
    }

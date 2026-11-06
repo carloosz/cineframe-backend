@@ -14,9 +14,16 @@ import { RoleGuard } from '../role/guards/role.guard';
 import { Roles } from '../role/decorator/roles.decorator';
 import { RoleEnum } from '../role/enum/role.enum';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { User } from '../user/entities/user.entity';
 import { UploadService } from './upload.service';
 import { UploadType } from './enum/upload-type.enum';
+import { Throttle, minutes } from '@nestjs/throttler';
+import { memoryStorage } from 'multer';
+
+const imageUploadOptions = {
+   storage: memoryStorage(),
+   fileFilter: imageFileFilter,
+   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+};
 
 //@UseGuards(RolesGuard)
 //@UseGuards(JwtAuthGuard)
@@ -30,26 +37,28 @@ export class UploadController {
    @Post('avatar')
    @ApiFileDecorator()
    @ApiConsumes('multipart/form-data')
-   @UseInterceptors(FileInterceptor('file', { fileFilter: imageFileFilter }))
+   @UseInterceptors(FileInterceptor('file', imageUploadOptions))
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
+   @Throttle({ default: { limit: 10, ttl: minutes(1) } })
    async uploadAvatar(
       @UploadedFile() file: Express.Multer.File,
-      @CurrentUser() user: User,
+      @CurrentUser('id') userId: string,
    ) {
-      return this.uploadService.uploadPhoto(user.id, UploadType.AVATAR, file);
+      return this.uploadService.uploadPhoto(userId, UploadType.AVATAR, file);
    }
 
    @Post('banner')
    @ApiFileDecorator()
    @ApiConsumes('multipart/form-data')
-   @UseInterceptors(FileInterceptor('file', { fileFilter: imageFileFilter }))
+   @UseInterceptors(FileInterceptor('file', imageUploadOptions))
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
+   @Throttle({ default: { limit: 10, ttl: minutes(1) } })
    async uploadBanner(
       @UploadedFile() file: Express.Multer.File,
-      @CurrentUser() user: User,
+      @CurrentUser('id') userId: string,
    ) {
-      return this.uploadService.uploadPhoto(user.id, UploadType.BANNER, file);
+      return this.uploadService.uploadPhoto(userId, UploadType.BANNER, file);
    }
 }

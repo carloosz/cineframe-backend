@@ -1,19 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Upload } from './entities/upload.entity';
 import { User } from '../user/entities/user.entity';
 import { UploadType } from './enum/upload-type.enum';
-import * as path from 'path';
-import * as fs from 'fs';
+import { StorageService } from '../storage/storage.service';
 
 const MAX_PHOTOS_PER_TYPE = 5;
 
 @Injectable()
 export class UploadService {
+   private readonly logger = new Logger(UploadService.name);
+
    constructor(
       @InjectRepository(Upload)
       private readonly uploadRepository: Repository<Upload>,
+      private readonly storage: StorageService,
    ) {}
 
    async uploadPhoto(
@@ -21,23 +23,42 @@ export class UploadService {
       type: UploadType,
       file: Express.Multer.File,
    ): Promise<Upload> {
-      // desativa a foto atual desse tipo
-      await this.uploadRepository.update(
-         { user: { id: userId }, type, active: true },
-         { active: false },
+      if (!file?.buffer) {
+         throw new BadRequestException('Envie um arquivo no campo "file"');
+      }
+      // fazer o upload no cloudinary, se falhar aqui, o banco nem é tocado
+      const stored = await this.storage.uploadImage(file.buffer, type);
+
+      let upload: Upload;
+      try {
+         //desativa a atual e cria a nova: ou os dois, ou nenhum
+         upload = await this.uploadRepository.manager.transaction(
+            async (em) => {
+               await em.update(
+                  Upload,
+                  { user: { id: userId }, type, active: true },
+                  { active: false },
+               );
+               return em.save(
+                  em.create(Upload, {
+                     filename: stored.public_id, // agora filename e o public_id
+                     mimetype: file.mimetype,
+                     type,
+                     active: true,
+                     user: { id: userId } as User,
+                  }),
+               );
+            },
+         );
+      } catch (e) {
+         // não deixa arquivo órfão no Cloudinary se o banco falhou
+         await this.storage.delete(stored.public_id).catch(() => undefined);
+         throw e;
+      }
+
+      await this.enforceMaxPhotos(userId, type).catch((e: Error) =>
+         this.logger.warn(`Falha ao limpar fotos antigas: ${e.message}`),
       );
-
-      // cria a nova como ativa
-      const upload = this.uploadRepository.create({
-         filename: file.filename,
-         mimetype: file.mimetype,
-         type,
-         active: true,
-         user: { id: userId } as User,
-      });
-      await this.uploadRepository.save(upload);
-
-      await this.enforceMaxPhotos(userId, type);
 
       return upload;
    }
@@ -48,16 +69,15 @@ export class UploadService {
          order: { createdAt: 'DESC' },
       });
 
-      const excess = photos.slice(MAX_PHOTOS_PER_TYPE);
-
-      for (const photo of excess) {
-         await this.deleteFileFromDisk(photo.filename);
+      for (const photo of photos.slice(MAX_PHOTOS_PER_TYPE)) {
          await this.uploadRepository.delete(photo.id);
+         await this.storage
+            .delete(photo.filename)
+            .catch((e: Error) =>
+               this.logger.warn(
+                  `Arquivo ${photo.filename} não apagado: ${e.message}`,
+               ),
+            );
       }
-   }
-
-   private async deleteFileFromDisk(filename: string) {
-      const filePath = path.join(process.cwd(), 'files', filename);
-      await fs.promises.unlink(filePath).catch(() => {});
    }
 }

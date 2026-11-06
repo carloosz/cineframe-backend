@@ -13,7 +13,7 @@ import { env } from 'process';
 import { escapeLike } from 'src/common/escape-like';
 import { RoleEnum } from '../role/enum/role.enum';
 import { NotificationService } from '../notification/notification.service';
-import { avatarUrl } from 'src/common/avatar-url';
+import { avatarUrl } from 'src/common/image-urls';
 import { EmailService } from '../email/email.service';
 import { LoggerService } from '../logger/logger.service';
 import { CACHE_MANAGER } from 'node_modules/@nestjs/cache-manager/dist/cache.constants';
@@ -218,9 +218,7 @@ export class FollowService {
             const activePhoto = f.uploads.find(
                (u) => u.active && u.type === 'avatar',
             );
-            const formatUrl = activePhoto
-               ? `${env.API_URL}/files/${activePhoto.filename}`
-               : null;
+            const formatUrl = avatarUrl(f, 'avatar');
             return {
                ...f,
                photo: formatUrl,
