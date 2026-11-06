@@ -30,6 +30,7 @@ import { FollowModule } from './modules/follow/follow.module';
 import { FeedModule } from './modules/feed/feed.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
    imports: [
@@ -58,6 +59,7 @@ import { StorageModule } from './modules/storage/storage.module';
       FeedModule,
       NotificationModule,
       StorageModule,
+      ScheduleModule.forRoot(),
    ],
    controllers: [AppController],
    providers: [
