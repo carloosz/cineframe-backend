@@ -2,7 +2,13 @@ import { UserRole } from 'src/modules/user-role/entities/user-role.entity';
 import { UserInterface } from '../interfaces/user.interface';
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, IsBoolean } from 'class-validator';
+import {
+   IsEmail,
+   IsNotEmpty,
+   IsString,
+   IsBoolean,
+   IsOptional,
+} from 'class-validator';
 import { Upload } from 'src/modules/upload/entities/upload.entity';
 
 @Exclude()
@@ -105,4 +111,9 @@ export class UserDto implements UserInterface {
    @ApiPropertyOptional({ nullable: true })
    @Expose()
    banner?: string | null;
+
+   @ApiPropertyOptional()
+   @IsOptional()
+   @IsBoolean({ message: 'emailOnFollow deve ser verdadeiro ou falso' })
+   emailOnFollow?: boolean;
 }

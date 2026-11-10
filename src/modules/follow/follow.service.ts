@@ -49,6 +49,7 @@ export class FollowService {
                   email: true,
                   confirmed: true,
                   active: true,
+                  emailOnFollow: true,
                },
             }),
             this.userRepository.findOne({
@@ -60,7 +61,13 @@ export class FollowService {
             this.followRepository.countBy({ followerId: actorId }),
          ]);
 
-         if (!recipient?.confirmed || !recipient.active || !actor) return;
+         if (
+            !recipient?.confirmed ||
+            !recipient.active ||
+            !actor ||
+            !recipient.emailOnFollow
+         )
+            return;
 
          await this.emailService.send({
             to: recipient.email,

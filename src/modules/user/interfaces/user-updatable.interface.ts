@@ -5,4 +5,5 @@ export interface UserUpdatableInterface {
    location?: string;
    socialmedia?: string;
    active?: boolean;
+   emailOnFollow?: boolean;
 }

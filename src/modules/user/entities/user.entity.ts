@@ -58,4 +58,7 @@ export class User extends CommonEntity implements UserInterface {
 
    @Column({ type: 'varchar', nullable: true, unique: true })
    googleId!: string | null;
+
+   @Column({ type: 'boolean', default: true })
+   emailOnFollow!: boolean;
 }
