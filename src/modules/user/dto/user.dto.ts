@@ -57,9 +57,6 @@ export class UserDto implements UserInterface {
       description: 'Whether the user is active',
       example: true,
    })
-   @IsBoolean({ message: 'O active deve ser um boolean' })
-   active!: boolean;
-
    @Expose()
    confirmed!: boolean;
 

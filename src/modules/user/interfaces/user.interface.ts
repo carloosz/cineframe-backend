@@ -3,9 +3,9 @@ export interface UserInterface {
    name: string;
    password: string;
    salt: string;
-   active: boolean;
    bio?: string;
-   location?: string
-   socialmedia?: string
-   filmGenres?: string
+   location?: string;
+   socialmedia?: string;
+   filmGenres?: string;
+   emailOnFollow?: boolean;
 }
