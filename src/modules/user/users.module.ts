@@ -12,9 +12,10 @@ import { jwtConfig } from 'src/config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { EmailModule } from '../email/email.module';
 import { Upload } from '../upload/entities/upload.entity';
+import { FollowModule } from '../follow/follow.module';
 
 @Module({
-  imports: [
+   imports: [
       TypeOrmModule.forFeature([User, UserRole, Role, Upload]),
       JwtModule.registerAsync({
          imports: [ConfigModule],
@@ -23,10 +24,11 @@ import { Upload } from '../upload/entities/upload.entity';
             secret: config.access.secret as string,
          }),
       }),
-      EmailModule
+      EmailModule,
+      FollowModule,
    ],
-  controllers: [UserController],
-  providers: [UserService, UserRepository],
-  exports: [UserService, UserRepository]
+   controllers: [UserController],
+   providers: [UserService, UserRepository],
+   exports: [UserService, UserRepository],
 })
 export class UserModule {}

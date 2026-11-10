@@ -9,6 +9,9 @@ import {
    Res,
    UseGuards,
    ParseUUIDPipe,
+   Query,
+   DefaultValuePipe,
+   ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,6 +28,7 @@ import { RoleEnum } from '../role/enum/role.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeFilmGenresDto } from './dto/change-film-genres.dto';
 import { Throttle, minutes } from '@nestjs/throttler';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth-guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -58,6 +62,24 @@ export class UserController {
    @Roles(RoleEnum.Authenticated)
    me(@CurrentUser() user: User) {
       return this.userService.findOne(user.id);
+   }
+
+   @ApiOperation({ summary: 'Pesquisar usuários' })
+   @Get('search')
+   @UseGuards(OptionalJwtAuthGuard) // o flag "seguindo" depende de quem pesquisa
+   @Throttle({ default: { limit: 30, ttl: minutes(1) } })
+   searchUsers(
+      @Query('q') q = '',
+      @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+      @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
+      @CurrentUser('id') userId?: string,
+   ) {
+      return this.userService.searchPeople(
+         q,
+         userId,
+         Math.max(page, 1),
+         Math.min(Math.max(limit, 1), 30),
+      );
    }
 
    @ApiOperation({ summary: 'Find one user' })

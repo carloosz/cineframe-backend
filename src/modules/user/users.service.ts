@@ -24,6 +24,8 @@ import { FilmGenresEnum } from './enum/film-genres.enum';
 import { Upload } from '../upload/entities/upload.entity';
 import { randomBytes } from 'crypto';
 import { avatarUrl, bannerUrl, uploadUrls } from 'src/common/image-urls';
+import { escapeLike } from 'src/common/escape-like';
+import { FollowService } from '../follow/follow.service';
 
 @Injectable()
 export class UserService {
@@ -38,6 +40,7 @@ export class UserService {
       private readonly emailService: EmailService,
       private readonly templateService: TemplateService,
       private readonly jwtService: JwtService,
+      private readonly followService: FollowService,
    ) {
       this.loggerService.setContext(UserService.name);
    }
@@ -475,5 +478,51 @@ export class UserService {
       });
 
       return user;
+   }
+
+   async searchPeople(
+      query: string,
+      viewerId: string | undefined,
+      page: number,
+      limit: number,
+   ) {
+      const term = query.trim().replace(/^@/, '');
+      if (term.length < 2)
+         return { page, totalPages: 0, totalResults: 0, results: [] };
+
+      const like = `%${escapeLike(term)}%`;
+      const prefix = `${escapeLike(term)}%`;
+
+      const base = this.userRepository
+         .createQueryBuilder('u')
+         .where('(u."nickname" ILIKE :like OR u."name" ILIKE :like)', { like })
+         .andWhere('u."active" = true');
+
+      const total = await base.getCount();
+
+      const rows = await base
+         .clone()
+         .select('u.id', 'id')
+         .setParameter('prefix', prefix)
+         .orderBy(
+            'CASE WHEN u."nickname" ILIKE :prefix THEN 0 WHEN u."name" ILIKE :prefix THEN 1 ELSE 2 END',
+            'ASC',
+         )
+         .addOrderBy('u."nickname"', 'ASC')
+         .offset((page - 1) * limit)
+         .limit(limit)
+         .getRawMany<{ id: string }>();
+
+      const results = await this.followService.buildPersonCards(
+         rows.map((r) => r.id),
+         viewerId,
+      );
+
+      return {
+         page,
+         totalPages: Math.ceil(total / limit),
+         totalResults: total,
+         results,
+      };
    }
 }

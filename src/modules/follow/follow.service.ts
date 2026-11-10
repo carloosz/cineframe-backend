@@ -321,4 +321,80 @@ export class FollowService {
          })
          .slice(0, limit);
    }
+
+   async buildPersonCards(ids: string[], loggedUserId?: string) {
+      if (!ids.length) return [];
+
+      const [users, reviewCounts, iFollow, followMe, commons] =
+         await Promise.all([
+            this.userRepository.find({
+               where: { id: In(ids) },
+               select: { id: true, name: true, nickname: true },
+               relations: { uploads: true },
+            }),
+            // críticas escritas por cada pessoa
+            this.userMovieRepository
+               .createQueryBuilder('um')
+               .select('um.userId', 'userId')
+               .addSelect('COUNT(*)', 'count')
+               .where('um.userId IN (:...ids)', { ids })
+               .andWhere('um.review IS NOT NULL')
+               .groupBy('um.userId')
+               .getRawMany<{ userId: string; count: string }>(),
+            // quem desta lista eu sigo
+            loggedUserId
+               ? this.followRepository.find({
+                    where: { followerId: loggedUserId, followingId: In(ids) },
+                    select: { followingId: true },
+                 })
+               : Promise.resolve([] as Follow[]),
+            // quem desta lista me segue
+            loggedUserId
+               ? this.followRepository.find({
+                    where: { followingId: loggedUserId, followerId: In(ids) },
+                    select: { followerId: true },
+                 })
+               : Promise.resolve([] as Follow[]),
+            // amigos em comum
+            loggedUserId
+               ? this.followRepository
+                    .createQueryBuilder('f')
+                    .select('f.followerId', 'userId')
+                    .addSelect('COUNT(*)', 'count')
+                    .where('f.followerId IN (:...ids)', { ids })
+                    .andWhere(
+                       'f."followingId" IN (SELECT m."followingId" FROM follow m WHERE m."followerId" = :me)',
+                       { me: loggedUserId },
+                    )
+                    .groupBy('f.followerId')
+                    .getRawMany<{ userId: string; count: string }>()
+               : Promise.resolve([] as { userId: string; count: string }[]),
+         ]);
+
+      const userById = new Map(users.map((u) => [u.id, u]));
+      const reviewsBy = new Map(
+         reviewCounts.map((r) => [r.userId, Number(r.count)]),
+      );
+      const commonBy = new Map(commons.map((r) => [r.userId, Number(r.count)]));
+      const iFollowSet = new Set(iFollow.map((x) => x.followingId));
+      const followMeSet = new Set(followMe.map((x) => x.followerId));
+
+      return ids.flatMap((id) => {
+         const u = userById.get(id);
+         if (!u) return [];
+         return [
+            {
+               id,
+               name: u.name,
+               nickname: u.nickname,
+               photo: avatarUrl(u),
+               following: iFollowSet.has(id),
+               isMyFollower: followMeSet.has(id),
+               isMe: id === loggedUserId,
+               commonFollowers: commonBy.get(id) ?? 0,
+               reviews: reviewsBy.get(id) ?? 0,
+            },
+         ];
+      });
+   }
 }

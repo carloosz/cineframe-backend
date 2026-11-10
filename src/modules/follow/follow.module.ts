@@ -19,5 +19,6 @@ import { LoggerModule } from '../logger/logger.module';
       EmailModule,
       LoggerModule,
    ],
+   exports: [FollowService],
 })
 export class FollowModule {}
