@@ -45,6 +45,23 @@ export class UserService {
       this.loggerService.setContext(UserService.name);
    }
 
+   private matchingPeople(term: string) {
+      const like = `%${escapeLike(term)}%`;
+      const prefix = `${escapeLike(term)}%`;
+
+      return this.userRepository
+         .createQueryBuilder('u')
+         .select('u.id', 'id')
+         .where('(u."nickname" ILIKE :like OR u."name" ILIKE :like)', { like })
+         .andWhere('u."active" = true')
+         .setParameter('prefix', prefix)
+         .orderBy(
+            'CASE WHEN u."nickname" ILIKE :prefix THEN 0 WHEN u."name" ILIKE :prefix THEN 1 ELSE 2 END',
+            'ASC',
+         )
+         .addOrderBy('u."nickname"', 'ASC');
+   }
+
    private async generateNickname(name: string): Promise<string> {
       const base =
          name
@@ -524,5 +541,30 @@ export class UserService {
          totalResults: total,
          results,
       };
+   }
+
+   async suggestPeople(query: string, limit = 3) {
+      const term = query.trim().replace(/^@/, '');
+      if (term.length < 2) return [];
+
+      const rows = await this.matchingPeople(term)
+         .limit(limit)
+         .getRawMany<{ id: string }>();
+      if (!rows.length) return [];
+
+      const ids = rows.map((r) => r.id);
+      const users = await this.userRepository.find({
+         where: { id: In(ids) },
+         select: { id: true, name: true, nickname: true },
+         relations: { uploads: true },
+      });
+      const byId = new Map(users.map((u) => [u.id, u]));
+
+      return ids.flatMap((id) => {
+         const u = byId.get(id);
+         return u
+            ? [{ id, nickname: u.nickname, name: u.name, photo: avatarUrl(u) }]
+            : [];
+      });
    }
 }

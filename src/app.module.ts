@@ -31,6 +31,7 @@ import { FeedModule } from './modules/feed/feed.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
    imports: [
@@ -60,6 +61,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       NotificationModule,
       StorageModule,
       ScheduleModule.forRoot(),
+      SearchModule,
    ],
    controllers: [AppController],
    providers: [
