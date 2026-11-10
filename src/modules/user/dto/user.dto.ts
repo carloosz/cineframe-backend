@@ -112,6 +112,7 @@ export class UserDto implements UserInterface {
    @Expose()
    banner?: string | null;
 
+   @Expose()
    @ApiPropertyOptional()
    @IsOptional()
    @IsBoolean({ message: 'emailOnFollow deve ser verdadeiro ou falso' })
