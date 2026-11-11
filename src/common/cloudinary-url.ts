@@ -1,10 +1,10 @@
 import { env } from 'process';
 
 const PRESETS = {
-   avatar: 'c_fill,g_auto,w_256,h_256/f_auto/q_auto',
-   avatarSmall: 'c_fill,g_auto,w_64,h_64/f_auto/q_auto',
-   banner: 'c_fill,g_auto,w_1600,h_400/f_auto/q_auto',
-   bannerSmall: 'c_fill,g_auto,w_400,h_100/f_auto/q_auto',
+   avatar: 't_avatar',
+   avatarSmall: 't_avatar_sm',
+   banner: 't_banner',
+   bannerSmall: 't_banner_sm',
 } as const;
 
 export type ImagePreset = keyof typeof PRESETS;
