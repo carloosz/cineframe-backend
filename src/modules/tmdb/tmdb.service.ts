@@ -7,6 +7,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
+   TmdbGenre,
    TmdbMovieDetails,
    TmdbMovieSummary,
    TmdbPaginated,
@@ -120,5 +121,11 @@ export class TmdbService {
                m.credits.crew.find((c) => c.job === 'Director')?.name ?? null,
          } satisfies TmdbMovieCard;
       });
+   }
+
+   genres() {
+      return this.cached('tmdb:genres', 7 * 24 * HOUR, () =>
+         this.get<{ genres: TmdbGenre[] }>('/genre/movie/list'),
+      );
    }
 }

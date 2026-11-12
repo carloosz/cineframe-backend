@@ -46,10 +46,12 @@ export class UserMovieService {
 
    private markWatched(
       um: UserMovie,
-      movie?: { runtime: number | null } | null,
+      movie?: { runtime: number | null; genres: { id: number }[] } | null,
    ) {
       um.watchedAt ??= new Date();
       if (!um.runtime && movie?.runtime) um.runtime = movie.runtime;
+      if (um.genreIds == null && movie)
+         um.genreIds = movie.genres.map((g) => g.id);
    }
 
    private async getOrCreate(userId: string, tmdbId: number) {
@@ -627,5 +629,33 @@ export class UserMovieService {
       ]);
 
       return { watched, rated, watchlist, minutes: Number(sum?.minutes ?? 0) };
+   }
+
+   async getFavoriteGenres(userId: string, limit = 5, onlyFavorites = false) {
+      const [rows, genreList, totalWatched] = await Promise.all([
+         this.userMovieRepository.query(
+            `SELECT g AS "genreId", COUNT(*)::int AS count
+       FROM user_movie um, unnest(um."genreIds") AS g
+       WHERE um."userId" = $1 AND um."watchedAt" IS NOT NULL
+       ${onlyFavorites ? 'AND um.favorite = true' : ''}
+       GROUP BY g
+       ORDER BY count DESC, g ASC
+       LIMIT $2`,
+            [userId, limit],
+         ) as Promise<{ genreId: number; count: number }[]>,
+         this.tmdb.genres(),
+         this.userMovieRepository.countBy({ userId, watchedAt: Not(IsNull()) }),
+      ]);
+
+      const nameById = new Map(genreList.genres.map((g) => [g.id, g.name]));
+
+      return {
+         totalWatched,
+         genres: rows.map((r) => ({
+            id: r.genreId,
+            name: nameById.get(r.genreId) ?? 'Outros',
+            count: r.count,
+         })),
+      };
    }
 }

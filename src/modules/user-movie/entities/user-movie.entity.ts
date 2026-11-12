@@ -32,4 +32,7 @@ export class UserMovie extends CommonEntity {
 
    @Column({ type: 'smallint', nullable: true })
    runtime!: number | null; //minutos
+
+   @Column('int', { array: true, nullable: true })
+   genreIds!: number[] | null;
 }

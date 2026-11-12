@@ -52,4 +52,18 @@ export class ProfileMoviesController {
    getStats(@Param('userId', ParseUUIDPipe) userId: string) {
       return this.userMovieService.getStats(userId);
    }
+
+   @Get('genres')
+   getFavoriteGenres(
+      @Param('userId', ParseUUIDPipe) userId: string,
+      @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+      @Query('onlyFavorites', new DefaultValuePipe(false))
+      onlyFavorites: boolean,
+   ) {
+      return this.userMovieService.getFavoriteGenres(
+         userId,
+         limit,
+         onlyFavorites,
+      );
+   }
 }
