@@ -635,12 +635,12 @@ export class UserMovieService {
       const [rows, genreList, totalWatched] = await Promise.all([
          this.userMovieRepository.query(
             `SELECT g AS "genreId", COUNT(*)::int AS count
-       FROM user_movie um, unnest(um."genreIds") AS g
-       WHERE um."userId" = $1 AND um."watchedAt" IS NOT NULL
-       ${onlyFavorites ? 'AND um.favorite = true' : ''}
-       GROUP BY g
-       ORDER BY count DESC, g ASC
-       LIMIT $2`,
+               FROM user_movie um, unnest(um."genreIds") AS g
+               WHERE um."userId" = $1 AND um."watchedAt" IS NOT NULL
+               ${onlyFavorites ? 'AND um.favorite = true' : ''}
+               GROUP BY g
+               ORDER BY count DESC, g ASC
+               LIMIT $2`,
             [userId, limit],
          ) as Promise<{ genreId: number; count: number }[]>,
          this.tmdb.genres(),

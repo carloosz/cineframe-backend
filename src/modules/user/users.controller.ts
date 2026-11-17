@@ -29,6 +29,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeFilmGenresDto } from './dto/change-film-genres.dto';
 import { Throttle, minutes } from '@nestjs/throttler';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth-guard';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('users')
@@ -43,7 +44,7 @@ export class UserController {
       return this.userService.create(createUserDto);
    }
 
-   @ApiOperation({ summary: 'Find all users' })
+   @ApiExcludeEndpoint()
    @Get()
    findAll() {
       return this.userService.findAll();
