@@ -27,8 +27,8 @@ async function bootstrap() {
    customLoggerService.setContext('bootstrap');
 
    const docOptions = new DocumentBuilder()
-      .setTitle('User API')
-      .setDescription('API for managing users')
+      .setTitle('Cineframe API')
+      .setDescription('API para o projeto Cineframe')
       .setVersion('1.0')
       .addBearerAuth()
       .build();
