@@ -6,6 +6,17 @@ export const ROOT_PAGE = `
    <meta name="viewport" content="width=device-width, initial-scale=1" />
    <meta name="color-scheme" content="dark" />
    <title>Cineframe API</title>
+   <meta name="description" content="Registre filmes, escreva críticas e acompanhe o que seus amigos estão assistindo." />
+   <meta property="og:type" content="website" />
+   <meta property="og:site_name" content="Cineframe" />
+   <meta property="og:title" content="Cineframe API" />
+   <meta property="og:description" content="Seu diário cinematográfico: registre filmes, escreva críticas e veja o que seus amigos estão assistindo." />
+   <meta property="og:url" content="https://cineframe-kbwu.onrender.com/" />
+   <meta property="og:image" content="https://res.cloudinary.com/yvxdcsdz/image/upload/v1795466110/imagem_2026-11-23_173510554.png" />
+   <meta property="og:image:width" content="1200" />
+   <meta property="og:image:height" content="630" />
+   <meta property="og:image:alt" content="Logo do Cineframe" />
+   <meta name="twitter:card" content="summary_large_image" />
    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b5cf6'/%3E%3Cpath d='M11 9l12 7-12 7z' fill='white'/%3E%3C/svg%3E" />
    <style>
       :root {
