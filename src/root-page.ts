@@ -163,7 +163,7 @@ export const ROOT_PAGE = `
 
          <div class="actions">
          <a class="btn btn-primary" href="https://cineframe77.netlify.app">Abrir o Cineframe</a>
-         <a class="btn" href="/docs">Documentação da API</a>
+         <a class="btn" href="/api">Documentação da API</a>
          <a class="btn" href="/health">Status do servidor</a>
          </div>
       </div>
