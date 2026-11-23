@@ -3,6 +3,7 @@ import { Get, Query } from '@nestjs/common';
 import { Throttle, minutes } from '@nestjs/throttler';
 import { MovieService } from '../movie/movie.service';
 import { UserService } from '../user/users.service';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('search')
 export class SearchController {
@@ -11,6 +12,9 @@ export class SearchController {
       private readonly userService: UserService,
    ) {}
 
+   @ApiOperation({
+      summary: 'Sugestão de filmes e pessoas para barra de pesquisa',
+   })
    @Get('suggest')
    @Throttle({ default: { limit: 60, ttl: minutes(1) } })
    async suggest(@Query('q') q = '') {

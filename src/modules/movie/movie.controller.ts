@@ -22,13 +22,13 @@ export class MovieController {
       private readonly userMovieService: UserMovieService,
    ) {}
 
-   @ApiOperation({ summary: 'Get trending movies' })
+   @ApiOperation({ summary: 'Obter filmes em alta' })
    @Get('trending')
    trending() {
       return this.movieService.trending();
    }
 
-   @ApiOperation({ summary: 'Search movies' })
+   @ApiOperation({ summary: 'Pesquisar filmes' })
    @Throttle({ default: { limit: 30, ttl: minutes(1) } })
    @Get('search')
    search(@Query('q') q: string, @Query('page') page?: string) {
@@ -36,14 +36,14 @@ export class MovieController {
    }
 
    @ApiOperation({
-      summary: 'Get movie recommendations based on a specific movie',
+      summary: 'Obter recomendações de filmes com base em um filme específico',
    })
    @Get(':id/recommendations')
    recommendations(@Param('id', ParseIntPipe) id: number) {
       return this.movieService.recommendations(id);
    }
 
-   @ApiOperation({ summary: 'Get featured movie of the week' })
+   @ApiOperation({ summary: 'Obter filmes em destaque da semana' })
    @Get('featured')
    featured() {
       return this.movieService.featured();
@@ -54,13 +54,13 @@ export class MovieController {
       return this.movieService.inTheaters();
    }
 
-   @ApiOperation({ summary: 'Get movie details' })
+   @ApiOperation({ summary: 'Obter detalhes do filme' })
    @Get(':id')
    details(@Param('id', ParseIntPipe) id: number) {
       return this.movieService.details(id);
    }
 
-   @ApiOperation({ summary: 'Get reviews for a specific movie' })
+   @ApiOperation({ summary: 'Obter críticas para um filme específico' })
    @Get(':id/reviews')
    @UseGuards(OptionalJwtAuthGuard)
    reviews(

@@ -1,11 +1,13 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { UserMovieService } from './user-movie.service';
 import { DefaultValuePipe, ParseIntPipe, ParseUUIDPipe } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Controller('users/:userId')
 export class ProfileMoviesController {
    constructor(private readonly userMovieService: UserMovieService) {}
 
+   @ApiProperty({ description: 'Obter filmes assistidos do usuário' })
    @Get('watched')
    getWatched(
       @Param('userId', ParseUUIDPipe) userId: string,
@@ -22,6 +24,9 @@ export class ProfileMoviesController {
       );
    }
 
+   @ApiProperty({
+      description: 'Obter filmes que o usuário adicionou à lista de desejo',
+   })
    @Get('watchlist')
    getWatchlist(
       @Param('userId', ParseUUIDPipe) userId: string,
@@ -35,6 +40,7 @@ export class ProfileMoviesController {
       );
    }
 
+   @ApiProperty({ description: 'Obter filmes avaliados pelo usuário' })
    @Get('rateds')
    getRateds(
       @Param('userId', ParseUUIDPipe) userId: string,
@@ -48,6 +54,7 @@ export class ProfileMoviesController {
       );
    }
 
+   @ApiProperty({ description: 'Obter estatísticas de filmes do usuário' })
    @Get('stats')
    getStats(@Param('userId', ParseUUIDPipe) userId: string) {
       return this.userMovieService.getStats(userId);

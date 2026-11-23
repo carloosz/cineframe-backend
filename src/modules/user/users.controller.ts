@@ -36,8 +36,8 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 export class UserController {
    constructor(private readonly userService: UserService) {}
 
-   @ApiOperation({ summary: 'Create user' })
-   @ApiOkResponse({ description: 'User created successfully' })
+   @ApiOperation({ summary: 'Cadastrar novo usuário' })
+   @ApiOkResponse({ description: 'Usuário cadastrado com sucesso' })
    @Throttle({ default: { limit: 5, ttl: minutes(1) } })
    @Post()
    create(@Body() createUserDto: CreateUserDto) {
@@ -57,7 +57,7 @@ export class UserController {
       res.send(html);
    }
 
-   @ApiOperation({ summary: 'Find logged user' })
+   @ApiOperation({ summary: 'Obter informações do usuário logado' })
    @Get('me')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
@@ -83,13 +83,13 @@ export class UserController {
       );
    }
 
-   @ApiOperation({ summary: 'Find one user' })
+   @ApiOperation({ summary: 'Obter informações de um usuário específico' })
    @Get(':id')
    async findOne(@IsUUIDParam('id') id: string) {
       return await this.userService.findOne(id);
    }
 
-   @ApiOperation({ summary: 'Update logged user' })
+   @ApiOperation({ summary: 'Atualizar informações do usuário logado' })
    @Patch('edit-my-account')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
@@ -97,7 +97,7 @@ export class UserController {
       return this.userService.update(user.id, updateUserDto);
    }
 
-   @ApiOperation({ summary: 'Delete logged user' })
+   @ApiOperation({ summary: 'Excluir usuário logado' })
    @Delete('delete-my-account')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
@@ -105,7 +105,7 @@ export class UserController {
       return this.userService.remove(user.id);
    }
 
-   @ApiOperation({ summary: 'Change logged user password' })
+   @ApiOperation({ summary: 'Alterar senha do usuário logado' })
    @Patch('change-password')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
@@ -121,7 +121,9 @@ export class UserController {
       );
    }
 
-   @ApiOperation({ summary: 'Change logged user favorite film genres' })
+   @ApiOperation({
+      summary: 'Alterar gêneros de filmes favoritos do usuário logado',
+   })
    @Patch('change-film-genres')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)
@@ -135,14 +137,14 @@ export class UserController {
       );
    }
 
-   @ApiOperation({ summary: 'Get any user by id' })
+   @ApiOperation({ summary: 'Obter perfil de qualquer usuário pelo ID' })
    @Throttle({ default: { limit: 50, ttl: minutes(1) } })
    @Get(':userId/profile')
    async getUserProfile(@Param('userId', ParseUUIDPipe) userId: string) {
       return await this.userService.getUserProfile(userId);
    }
 
-   @ApiOperation({ summary: 'Set active some existing upload' })
+   @ApiOperation({ summary: 'Definir upload como ativo' })
    @Patch(':uploadId/set-upload-active')
    @UseGuards(JwtAuthGuard, RoleGuard)
    @Roles(RoleEnum.Authenticated)

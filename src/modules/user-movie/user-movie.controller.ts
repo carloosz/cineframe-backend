@@ -24,7 +24,7 @@ import { ApiOperation } from '@nestjs/swagger';
 export class UserMovieController {
    constructor(private readonly userMovieService: UserMovieService) {}
 
-   @ApiOperation({ summary: 'Rate movie' })
+   @ApiOperation({ summary: 'Avaliar filme' })
    @Put(':tmdbId/rating')
    rate(
       @CurrentUser('id') userId: string,
@@ -34,7 +34,7 @@ export class UserMovieController {
       return this.userMovieService.rateMovie(userId, tmdbId, dto);
    }
 
-   @ApiOperation({ summary: 'Set movie as favorite' })
+   @ApiOperation({ summary: 'Marcar filme como favorito' })
    @Put(':tmdbId/favorite')
    favorite(
       @CurrentUser('id') userId: string,
@@ -43,7 +43,7 @@ export class UserMovieController {
       return this.userMovieService.setFavorite(userId, tmdbId, true);
    }
 
-   @ApiOperation({ summary: 'Unfavorite movie' })
+   @ApiOperation({ summary: 'Remover filme dos favoritos' })
    @Delete(':tmdbId/favorite')
    unfavorite(
       @CurrentUser('id') userId: string,
@@ -52,7 +52,7 @@ export class UserMovieController {
       return this.userMovieService.setFavorite(userId, tmdbId, false);
    }
 
-   @ApiOperation({ summary: 'Set movie as watched' })
+   @ApiOperation({ summary: 'Marcar filme como assistido' })
    @Put(':tmdbId/watched')
    watched(
       @CurrentUser('id') userId: string,
@@ -61,7 +61,7 @@ export class UserMovieController {
       return this.userMovieService.setWatched(userId, tmdbId, true);
    }
 
-   @ApiOperation({ summary: 'Unwatch movie' })
+   @ApiOperation({ summary: 'Marcar filme como não assistido' })
    @Delete(':tmdbId/watched')
    unwatched(
       @CurrentUser('id') userId: string,
@@ -70,7 +70,7 @@ export class UserMovieController {
       return this.userMovieService.setWatched(userId, tmdbId, false);
    }
 
-   @ApiOperation({ summary: 'Add movie to watchlist' })
+   @ApiOperation({ summary: 'Adicionar filme à lista de desejo' })
    @Put(':tmdbId/watchlist')
    addToWatchlist(
       @CurrentUser('id') userId: string,
@@ -79,7 +79,7 @@ export class UserMovieController {
       return this.userMovieService.setWatchlist(userId, tmdbId, true);
    }
 
-   @ApiOperation({ summary: 'Remove movie from watchlist' })
+   @ApiOperation({ summary: 'Remover filme da lista de desejo' })
    @Delete(':tmdbId/watchlist')
    removeFromWatchlist(
       @CurrentUser('id') userId: string,
@@ -88,7 +88,7 @@ export class UserMovieController {
       return this.userMovieService.setWatchlist(userId, tmdbId, false);
    }
 
-   @ApiOperation({ summary: 'Get my state for a movie' })
+   @ApiOperation({ summary: 'Obter meu estado para um filme' })
    @Get(':tmdbId')
    state(
       @CurrentUser('id') userId: string,
@@ -97,7 +97,7 @@ export class UserMovieController {
       return this.userMovieService.getState(userId, tmdbId);
    }
 
-   @ApiOperation({ summary: 'Like a review' })
+   @ApiOperation({ summary: 'Curtir uma avaliação' })
    @Put('reviews/:reviewId/like')
    likeReview(
       @CurrentUser('id', ParseUUIDPipe) userId: string,
@@ -106,7 +106,7 @@ export class UserMovieController {
       return this.userMovieService.likeReview(userId, reviewId);
    }
 
-   @ApiOperation({ summary: 'Unlike a review' })
+   @ApiOperation({ summary: 'Remover curtida de uma avaliação' })
    @Delete('reviews/:reviewId/like')
    unlikeReview(
       @CurrentUser('id', ParseUUIDPipe) userId: string,

@@ -6,7 +6,12 @@ import {
    UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+   ApiBearerAuth,
+   ApiConsumes,
+   ApiOperation,
+   ApiTags,
+} from '@nestjs/swagger';
 import { ApiFileDecorator } from '../../common/decorators/api-file-decorator';
 import { imageFileFilter } from '../../common/utils/file-utils';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth-guard';
@@ -34,6 +39,7 @@ const imageUploadOptions = {
 export class UploadController {
    constructor(private readonly uploadService: UploadService) {}
 
+   @ApiOperation({ summary: 'Fazer upload de avatar' })
    @Post('avatar')
    @ApiFileDecorator()
    @ApiConsumes('multipart/form-data')
@@ -48,6 +54,7 @@ export class UploadController {
       return this.uploadService.uploadPhoto(userId, UploadType.AVATAR, file);
    }
 
+   @ApiOperation({ summary: 'Fazer upload de banner' })
    @Post('banner')
    @ApiFileDecorator()
    @ApiConsumes('multipart/form-data')

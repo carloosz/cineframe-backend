@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggerService } from './modules/logger/logger.service';
 import { LoggerSentryTransport } from './modules/logger/transports/logger-sentry.transport';
-import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {

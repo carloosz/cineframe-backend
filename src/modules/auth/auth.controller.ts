@@ -12,7 +12,12 @@ import { UserDto } from 'src/modules/user/dto/user.dto';
 import { LocalAuthGuard } from './guards/local-auth-guard';
 import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+   ApiOperation,
+   ApiResponse,
+   ApiParam,
+   ApiProperty,
+} from '@nestjs/swagger';
 import { AuthEmailDto } from './dto/auth-email.dto';
 import { AuthUpdatePasswordDto } from './dto/auth-update-password.dto';
 import { Throttle, minutes } from '@nestjs/throttler';
@@ -22,6 +27,7 @@ import { GoogleLoginDto } from './dto/google-login.dto';
 export class AuthController {
    constructor(private authService: AuthService) {}
 
+   @ApiOperation({ summary: 'Login' })
    @Throttle({ default: { limit: 5, ttl: minutes(1) } })
    @UseGuards(LocalAuthGuard)
    @Post('login')
@@ -31,7 +37,7 @@ export class AuthController {
    }
 
    @Post('refresh')
-   @ApiOperation({ summary: 'Refresh access token' })
+   @ApiOperation({ summary: 'Obter novo token de acesso' })
    async refresh(@Body() dto: RefreshTokenDto) {
       return this.authService.refresh(dto.refreshToken);
    }
@@ -41,12 +47,12 @@ export class AuthController {
    @HttpCode(200)
    @ApiOperation({
       description:
-         'Generate a reset token and send an email to the user, if the email exists',
+         'Gerar token de redefinição de senha e enviar e-mail para o usuário.',
    })
    @ApiResponse({
       status: 200,
       description:
-         'Success is returned even if the email does not exist for security reasons',
+         'O sucesso é retornado mesmo que o e-mail não exista por motivos de segurança.',
    })
    async forgotPassword(@Body() authEmailDto: AuthEmailDto): Promise<void> {
       return this.authService.forgotPassword(authEmailDto.email);
@@ -54,7 +60,8 @@ export class AuthController {
 
    @Patch(':resetToken/reset-password')
    @ApiOperation({
-      description: 'If resetToken exists and is still valid, update password.',
+      description:
+         'Se o resetToken existir e ainda for válido, atualizar a senha.',
       operationId: 'auth_resetUpdatePassword',
    })
    @ApiParam({
@@ -64,13 +71,18 @@ export class AuthController {
    })
    @ApiResponse({
       status: 200,
-      description: 'Password was changed successfully',
+      description: 'Senha alterada com sucesso.',
    })
-   @ApiResponse({ status: 400, description: 'Bad request.' })
+   @ApiResponse({ status: 400, description: 'Requisição inválida.' })
    @ApiResponse({
       status: 404,
-      description: 'Token does not exist or has expired.',
+      description: 'Token não existe ou expirou.',
    })
+   @ApiOperation({
+      description: 'Token de redefinição de senha',
+   })
+   @Throttle({ default: { limit: 5, ttl: minutes(1) } })
+   @HttpCode(200)
    async resetPassword(
       @Param('resetToken') resetToken: string,
       @Body() authUpdatePasswordDto: AuthUpdatePasswordDto,
@@ -78,7 +90,7 @@ export class AuthController {
       return this.authService.updatePassword(resetToken, authUpdatePasswordDto);
    }
 
-   @ApiOperation({ summary: 'Login with Google' })
+   @ApiOperation({ summary: 'Logar com Google' })
    @Throttle({ default: { limit: 10, ttl: minutes(1) } })
    @HttpCode(200)
    @Post('google')
